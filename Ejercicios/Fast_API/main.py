@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, Path
 from fastapi.responses import HTMLResponse
 from movies import movies_dict as movies
 from pydantic import BaseModel, Field
@@ -17,6 +17,8 @@ class Movie(BaseModel):
     year: int
     rating: float
     category: str
+
+
 
 class MovieCreate(BaseModel): 
     #se crean las validaciones con Field (pydantic)
@@ -67,7 +69,7 @@ def update_movie(id: int, movie: MovieUpdate) -> list[Movie]:
     return {"error": "Movie not found"}
 
 @app.delete("/movies/{id}", tags=["Movies"])
-def delete_movie(id: int) -> list[Movie]:
+def delete_movie(id: int = Path(gt=0)) -> list[Movie]:
     for index, movie in enumerate(movies):
         if movie["id"] == id:
             movies.pop(index)
