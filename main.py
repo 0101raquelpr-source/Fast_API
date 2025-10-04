@@ -63,11 +63,22 @@ def get_movie(id:int) -> Movie:
 
 
 @app.get('/movies/', tags=['Movies'])
-def get_movie_by_category(category:str, year:int) -> Movie:
+def get_movie_by_category(category: Optional[str] = None, year: Optional[int] = None) -> list[Movie]:
+    results = [] # Cambiamos para buscar múltiples resultados
+    if not category and not year:
+        raise HTTPException(status_code=400, detail="Debe especificar al menos 'category' o 'year'")
+
     for m in movies:
-        if m['category'].lower() == category.lower() and m['year'] == year:
-            return m
-        raise HTTPException(status_code=404, detail="Movie Category not found")
+        match = True 
+        if category and m.category.lower() != category.lower():
+            match = False  
+        if year and m.year != year:
+            match = False           
+        if match:
+            results.append(m)
+    if not results:
+        raise HTTPException(status_code=404, detail="No se encontraron películas con esos criterios")
+    return results 
 
 
 @app.post('/movies', tags=['Movies'])
@@ -76,20 +87,21 @@ def create_movie(movie: MovieCreate) -> list[Movie]:
     return [movie.model_dump() for movie in movies] 
 
 @app.put('/movies/{id}', tags=['Movies'])
-def update_movie(id:int, movie:MovieUpdate):
+def update_movie(id: int, movie: MovieUpdate) -> Movie:
+    update_data = movie.model_dump(exclude_unset=True) 
     for m in movies:
-        if m['id'] == id:
-            m['title'] = movie.title
-            m['overview'] = movie.overview
-            m['year'] = movie.year
-            m['rating'] = movie.rating
-            m['category'] = movie.category
-    return {'message': 'Movie updated'}
+        if m.id == id:
+            for key, value in update_data.items():
+                setattr(m, key, value)
+            
+            return m
+            
+    raise HTTPException(status_code=404, detail="Movie not found")
 
 @app.delete('/movies/{id}', tags=['Movies'])
-def delete_movie(id:int):
+def delete_movie(id: int):
     for m in movies:
-        if m['id'] == id:
+        if m.id == id:
             movies.remove(m)
-            return {'message': 'Movie deleted'}
-    return {'message': 'Movie not found'}
+            return {'message': 'Movie Deleted'}
+    raise HTTPException(status_code=404, detail="Movie not found")
