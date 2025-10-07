@@ -26,6 +26,11 @@ __pycache__/
 .pytest_cache/
 
 # -------------------------------------
+# Archivo de notas
+# -------------------------------------
+notas.txt
+
+# -------------------------------------
 # Archivos Temporales de SO (Windows)
 # -------------------------------------
 # Archivos temporales de MS Office, etc.
