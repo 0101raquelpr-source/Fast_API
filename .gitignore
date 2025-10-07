@@ -1,0 +1,32 @@
+# -------------------------------------
+# Entornos Virtuales
+# -------------------------------------
+# Ignora la carpeta venv y cualquier otro entorno virtual
+venv/
+.venv/
+env/
+
+# -------------------------------------
+# Archivos de Python y Compilación
+# -------------------------------------
+# Archivos de caché de Python (los que tienen el bytecode)
+__pycache__/
+*.pyc
+
+# -------------------------------------
+# Configuraciones de IDE (VS Code)
+# -------------------------------------
+# Ignora la carpeta de configuración local de VS Code
+.vscode/
+
+# -------------------------------------
+# Archivos de Logging y Testing
+# -------------------------------------
+*.log
+.pytest_cache/
+
+# -------------------------------------
+# Archivos Temporales de SO (Windows)
+# -------------------------------------
+# Archivos temporales de MS Office, etc.
+*~
