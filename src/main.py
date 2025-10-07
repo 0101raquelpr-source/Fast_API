@@ -10,6 +10,7 @@ app = FastAPI()
 app.title = "App Movies"
 app.version = "1.0.0"
 
+# Middleware 
 @app.middleware(middleware_type="http")
 async def http_error_handler(request: Request, call_next) -> Union[Response, JSONResponse]:
     try:
