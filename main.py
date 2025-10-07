@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI,Body,HTTPException 
+from fastapi import FastAPI,Body,HTTPException, Path, Query
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -22,7 +22,7 @@ class Movie(BaseModel):
 class MovieCreate(BaseModel): 
     #Validations are created with Field(pydantic)
     id: int
-    title: str = Field(min_length=5, max_length=40)
+    title: str = Field(min_length=2, max_length=60)
     overview: str  = Field(min_length=15)
     year: int = Field(gt=1900)
     rating: float = Field(gt=0, le=10, default=5)
@@ -55,7 +55,7 @@ def get_all_movies() -> list[Movie]:
 
 
 @app.get('/movies/{id}', tags=['Movies'])
-def get_movie(id:int) -> Movie:
+def get_movie(id:int = Path(gt=0)) -> Movie:
     for m in movies:
         if m.id == id:
             return m
@@ -63,11 +63,17 @@ def get_movie(id:int) -> Movie:
 
 
 @app.get('/movies/', tags=['Movies'])
-def get_movie_by_category(category:str, year:int) -> Movie:
-    for m in movies:
-        if m['category'].lower() == category.lower() and m['year'] == year:
-            return m
+def get_movie_by_category(category:str = Query(min_length=5,max_length=20)) -> list[dict]:
+    search_term = category.lower()
+    results = [
+        m.model_dump() 
+        for m in movies 
+        if search_term in m.category.lower()
+    ]
+    if not results: 
         raise HTTPException(status_code=404, detail="Movie Category not found")
+    return results
+    
 
 
 @app.post('/movies', tags=['Movies'])
@@ -78,18 +84,19 @@ def create_movie(movie: MovieCreate) -> list[Movie]:
 @app.put('/movies/{id}', tags=['Movies'])
 def update_movie(id:int, movie:MovieUpdate):
     for m in movies:
-        if m['id'] == id:
-            m['title'] = movie.title
-            m['overview'] = movie.overview
-            m['year'] = movie.year
-            m['rating'] = movie.rating
-            m['category'] = movie.category
-    return {'message': 'Movie updated'}
+        if m.id == id:
+            m.title= movie.title
+            m.overview = movie.overview
+            m.year = movie.year
+            m.rating = movie.rating
+            m.category = movie.category
+        return {'message': 'Movie updated'}
+    raise HTTPException(status_code=404, detail="Movie not found")
 
 @app.delete('/movies/{id}', tags=['Movies'])
 def delete_movie(id:int):
     for m in movies:
-        if m['id'] == id:
+        if m.id == id:
             movies.remove(m)
             return {'message': 'Movie deleted'}
-    return {'message': 'Movie not found'}
+    raise HTTPException(status_code=404, detail="Movie not found")
