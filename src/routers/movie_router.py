@@ -1,12 +1,11 @@
 
 from src.models.movie_model import Movie, MovieCreate, MovieUpdate
-from fastapi import Path, Query, APIRouter, HTTPException
+from fastapi import Path, Query, APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, HTMLResponse
+from src.dependencies import PaginationParams
+from src.database import movies
 
 movie_router = APIRouter()
-movies:list[Movie] = []
-
-
 
 @movie_router.get('/get_file', tags=['Files'])
 def get_file():
@@ -32,10 +31,9 @@ def get_movie(id:int = Path(gt=0)) -> Movie:
     raise HTTPException(status_code=404, detail="Movie not found")
 
 @movie_router.get('/', tags=['Movies'], response_description="List all movies")
-def get_all_movies() -> list[Movie]:
-    content = [movie.model_dump() for movie in movies] 
-    #return JSONResponse(content=content, status_code=200)
-    return movies
+def get_all_movies(pagination: PaginationParams = Depends()) -> list[Movie]:
+    paginated_movies = movies[pagination.offset : pagination.offset + pagination.size]
+    return paginated_movies
 
 @movie_router.post('/', tags=['Movies'],response_description="Add a movie")
 def create_movie(movie: MovieCreate) -> list[Movie]:
