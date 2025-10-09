@@ -1,13 +1,17 @@
 
-import os
-from fastapi import FastAPI,status,Body,HTTPException, Path, Query,Depends
+
+from fastapi import FastAPI,status,Body,HTTPException, Path, Query,Depends,Form
 from fastapi.requests import Request
 from fastapi.responses import PlainTextResponse,Response,JSONResponse
-from src.routers.movie_router import movie_router   
-from typing import Union, Annotated
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from src.routers.movie_router import movie_router   
+from typing import Union, Annotated
+import os
 from pathlib import Path
+from jose import jwt
+
 
 
 
@@ -23,7 +27,40 @@ app.mount("/static", StaticFiles(directory=static_path),name="static")
 templates = Jinja2Templates(directory=templates_path)
 
 
-# Middleware 
+###  Authentication  ###
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl = "token")
+
+users = {
+    "reich":{"username":"reich", "email":"reich@g.com", "password": 123456},
+    "will":{"username":"will", "email":"will@g.com", "password": "fakepass"},
+}
+
+def encode_token(payload:dict) -> str:
+    token = jwt.encode(payload, "my-secret",algorithm="HS256") 
+    return token
+
+def decode_token(token:Annotated[str,Depends(oauth2_scheme)]) -> dict:
+    data = jwt.decode(token, "my-secret",algorithms=["HS256"])
+    user = users.get(data["username"])
+    return user
+
+
+# OAuth - Token
+@app.post("/token", tags=['Home'])
+def login(form_data:Annotated[OAuth2PasswordRequestForm,Depends()]):
+    user = users.get(form_data.username)
+    print(user)
+    if not user or form_data.password != user["password"]: 
+            raise HTTPException(status_code=400, detail="Incorret username or password")
+    token = encode_token({"username" : user["username"], "password" : user["password"], "email" : user["email"]})
+    return {"access_token":token}
+
+# Protected route with authentication
+@app.get("/users/profile")
+def profile(my_user: Annotated[dict,Depends(decode_token)]):
+    return my_user
+
+###  Middleware  ###
 @app.middleware(middleware_type="http")
 async def http_error_handler(request: Request, call_next) -> Union[Response, JSONResponse]:
     try:
