@@ -9,11 +9,21 @@ from src.routers.movie_router import movie_router
 from src.routers.auth_router import auth_router
 from typing import Union
 from pathlib import Path
+from contextlib import asynccontextmanager
+from src.database import create_db_and_tables
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Code to run on startup
+    print("Startup: Creating database and tables...")
+    create_db_and_tables()
+    yield
+    # Code to run on shutdown (if any)
+    print("Shutdown: Application closing.")
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.title = "App Movies"
 app.version = "1.0.0"
 

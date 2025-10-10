@@ -2,7 +2,7 @@
 from typing import Optional
 from pydantic import BaseModel, Field, model_validator
 
-
+# models for treating movies as object classes in code.
 class Movie(BaseModel):
     id: int
     title: str
