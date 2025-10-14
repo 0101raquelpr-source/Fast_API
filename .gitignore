@@ -6,6 +6,9 @@ venv/
 .venv/
 env/
 
+# Ignora la carpeta venv scripts
+src/scripts/
+
 # -------------------------------------
 # Archivos de Python y Compilación
 # -------------------------------------
@@ -35,3 +38,12 @@ notas.txt
 # -------------------------------------
 # Archivos temporales de MS Office, etc.
 *~
+
+# -------------------------------------
+# Archivos de Base de Datos y Entorno
+# -------------------------------------
+# Archivo de base de datos de SQLite
+src/database.db
+
+# Archivo de variables de entorno
+.env
