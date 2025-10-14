@@ -15,14 +15,19 @@ The API uses JSON Web Tokens (JWT) for authentication. After a successful login,
 ### Auth Endpoints
 
 *   #### `POST /auth/register`
-    *   **Description**: Creates a new user. The default role is `user`.
+    *   **Description**: Creates a new user. The default role is `client`.
     *   **Request Body**: `UserCreate` model with `username` and `password`.
-    *   **Response**: `200 OK` with a confirmation message.
+    *   **Response**: `201 Created` with a confirmation message.
 
 *   #### `POST /auth/login`
     *   **Description**: Authenticates a user and returns an `access_token` in a cookie.
     *   **Request Body**: `username` and `password` in a form data.
     *   **Response**: `200 OK` with a confirmation message. The `Set-Cookie` header will contain the `access_token`.
+
+*   #### `GET /auth/profile`
+    *   **Description**: Retrieves the profile of the currently logged-in user.
+    *   **Authentication**: Requires a valid `access_token` cookie.
+    *   **Response**: `200 OK` with the user's profile data (id, username, role).
 
 *   #### `GET /auth/dashboard`
     *   **Description**: An example of a protected endpoint.
