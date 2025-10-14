@@ -1,6 +1,7 @@
-fastapi
-uvicorn[standard]
-python-jose[cryptography]
-passlib[bcrypt]
-jinja2
-python-multipart
+fastapi[all]==0.111.0
+jinja2==3.1.4
+passlib[argon2]==1.7.4
+pydantic-settings==2.3.4
+python-jose[cryptography]==3.3.0
+sqlmodel==0.0.19
+rgon2_cffi

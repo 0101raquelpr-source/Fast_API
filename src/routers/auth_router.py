@@ -1,67 +1,66 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Cookie
+from datetime import timedelta
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import JSONResponse
 from typing import Annotated
-from jose import jwt  # type: ignore
+from sqlmodel import Session, select
+from src.database import get_session
+from src.models.tables import User 
+from src.models.user_model import UserCreate
+from src.config import settings
+from src.security import (
+    verify_password,
+    create_access_token,
+    get_current_user,
+    get_current_admin_user,
+    get_password_hash,
+)
 
 auth_router = APIRouter()
 
-# Volvemos a usar contraseñas en texto plano para simplificar.
-users = {
-    "reich": {"username": "reich", "email": "reich@g.com", "password": "123456", "role": "admin"},
-    "will": {"username": "will", "email": "will@g.com", "password": "fakepass", "role": "user"},
-}
+@auth_router.post("/register", tags=['Auth'], status_code=status.HTTP_201_CREATED)
+def register(user_data: UserCreate, session: Session = Depends(get_session)):
+    # Check if user already exists
+    existing_user = session.exec(select(User).where(User.username == user_data.username)).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already exists"
+        )
 
-def encode_token(payload: dict) -> str:
-    token = jwt.encode(payload, "my-secret", algorithm="HS256")
-    return token
+    hashed_pw = get_password_hash(user_data.password)
+    new_user = User(username=user_data.username, password=hashed_pw, role=user_data.role)
+    session.add(new_user)
+    session.commit()
+    return {"message": "User created successfully"}
 
-def decode_token_from_cookie(access_token: Annotated[str | None, Cookie()] = None) -> dict:
-    if access_token is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+@auth_router.post("/login", tags=['Auth'])
+def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: Session = Depends(get_session)):
+    statement = select(User).where(User.username == form_data.username)
+    user = session.exec(statement).first()
 
-    try:
-        data = jwt.decode(access_token, "my-secret", algorithms=["HS256"])
-        user = users.get(data["username"])
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid user")
-        user_data = user.copy() # pyright: ignore[reportOptionalMemberAccess]
-        user_data.pop("password", None)
-        return user_data
-    except jwt.JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-
-def get_current_admin_user(current_user: Annotated[dict, Depends(decode_token_from_cookie)]):
-    """Depends to verify if the user is an administrador."""
-    if current_user.get("role") != "admin":
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-    return current_user
-
-### Authentication Endpoints ###
-
-@auth_router.post("/token", tags=['Auth'])
-def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()]):
-    user = users.get(form_data.username)
-    if not user or form_data.password != user["password"]:
+    if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password")
     
-    token_payload = {"username": user["username"], "role": user["role"]}
-    token = encode_token(token_payload)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"username": user.username, "role": user.role},
+        expires_delta=access_token_expires
+    )
 
-    # Stablish token as secure cookie
     response = JSONResponse(content={"message": "Login successful"})
     response.set_cookie(
         key="access_token",
-        value=token,
-        httponly=True,  # ¡Importante para la seguridad!
+        value=access_token,
+        httponly=True,
         samesite="strict"
     )
     return response
 
 @auth_router.get("/profile", tags=['Auth'])
-def profile(my_user: Annotated[dict, Depends(decode_token_from_cookie)]):
+def profile(my_user: Annotated[dict, Depends(get_current_user)]):
     return my_user
 
 @auth_router.get('/dashboard', tags=['Auth'])
