@@ -5,18 +5,36 @@ from fastapi.responses import JSONResponse
 from typing import Annotated
 from sqlmodel import Session, select
 from src.database import get_session
-from src.models.tables import User
+from src.models.tables import User 
+from src.models.user_model import UserCreate
 from src.config import settings
 from src.security import (
     verify_password,
     create_access_token,
     get_current_user,
     get_current_admin_user,
+    get_password_hash,
 )
 
 auth_router = APIRouter()
 
-@auth_router.post("/token", tags=['Auth'])
+@auth_router.post("/register", tags=['Auth'], status_code=status.HTTP_201_CREATED)
+def register(user_data: UserCreate, session: Session = Depends(get_session)):
+    # Check if user already exists
+    existing_user = session.exec(select(User).where(User.username == user_data.username)).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Username already exists"
+        )
+
+    hashed_pw = get_password_hash(user_data.password)
+    new_user = User(username=user_data.username, password=hashed_pw, role=user_data.role)
+    session.add(new_user)
+    session.commit()
+    return {"message": "User created successfully"}
+
+@auth_router.post("/login", tags=['Auth'])
 def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()], session: Session = Depends(get_session)):
     statement = select(User).where(User.username == form_data.username)
     user = session.exec(statement).first()
