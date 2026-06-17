@@ -1,0 +1,37 @@
+name: pr_api_fastapi_proyecto
+
+version: '3.8'
+
+services:
+  # 1. EL GUARDIÁN (Nginx) - Único expuesto en Windows
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_guardian_FastApi
+    ports:
+      - "80:80" # http://localhost/docs
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+
+  # 2. TU API (FastAPI) - Protegida en la red interna
+  api:
+    build: .
+    container_name: api_fastapi
+    restart: always
+    # No se especifica la sección 'ports' aquí para que el puerto 8000 quede capado al exterior.
+    # Nginx hablará con este contenedor por la red interna usando el puerto 8000.
+    # VARIABLES de ENTORNO
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - ./src:/app/src      # Mapea tu código y salva el archivo database.db
+      - ./files:/app/files  # Mapea y salva tu carpeta de archivos
+      # Aplicar el volumen oculto de Docker en la carpeta '/data' que pusimos en Python
+      - fastapi_db_data:/data
+
+
+# === DECLARACIÓN DEL VOLUMEN OCULTO DE DOCKER ===
+volumes:
+  fastapi_db_data:
+    # Docker creará este almacén en su propia zona protegida, y ya no en la carpeta 'src'
