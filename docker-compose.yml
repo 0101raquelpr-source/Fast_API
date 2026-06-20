@@ -25,8 +25,8 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
     volumes:
-      - ./src:/app/src      # Mapea tu código y salva el archivo database.db
-      - ./files:/app/files  # Mapea y salva tu carpeta de archivos
+      - ./src:/app/src      # Mapea el código y salva el archivo database.db
+      - ./files:/app/files  # Mapea y salva la carpeta de archivos
       # Aplicar el volumen oculto de Docker en la carpeta '/data' que pusimos en Python
       - fastapi_db_data:/data
 

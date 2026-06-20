@@ -5,3 +5,5 @@ pydantic-settings==2.3.4
 python-jose[cryptography]==3.3.0
 sqlmodel==0.0.19
 argon2-cffi
+pytest
+httpx2
