@@ -11,6 +11,7 @@ from typing import Union
 from pathlib import Path
 from contextlib import asynccontextmanager
 from src.database import create_db_and_tables
+import os
 
 
 @asynccontextmanager
@@ -28,9 +29,9 @@ app.title = "App Movies"
 app.version = "1.0.0"
 
 # Stablish path to templates
-BASE_DIR = Path(__file__).parent # root path
+BASE_DIR = Path(__file__).parent # root path #src
 static_path = BASE_DIR / "static"
-templates_path = BASE_DIR / "templates"
+templates_path = BASE_DIR / "templates" # src/templates
 app.mount("/static", StaticFiles(directory=static_path),name="static")
 templates = Jinja2Templates(directory=templates_path)
 
@@ -52,7 +53,10 @@ async def http_error_handler(request: Request, call_next) -> Union[Response, JSO
 # HOME Endpoint
 @app.get('/', tags=['Home'])
 def home(request : Request):
-    response = templates.TemplateResponse('index.html', {'request': request,'message': 'Welcome'})
+    response = templates.TemplateResponse(
+        request=request,
+        name= 'index.html', 
+        context={'request': request,'message': 'Welcome'})
     response.set_cookie(key="last_visit", value="welcome_user", expires=60)
     return response
 

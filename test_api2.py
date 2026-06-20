@@ -1,4 +1,7 @@
 import pytest # type: ignore
+from dotenv import load_dotenv
+load_dotenv() # Set .env file  
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
