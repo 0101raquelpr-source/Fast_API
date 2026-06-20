@@ -31,7 +31,7 @@ services:
       - fastapi_db_data:/data
 
 
-# === DECLARACIÓN DEL VOLUMEN OCULTO DE DOCKER ===
+# ---- DECLARACIÓN DEL VOLUMEN OCULTO DE DOCKER ----
 volumes:
   fastapi_db_data:
     # Docker creará este almacén en su propia zona protegida, y ya no en la carpeta 'src'
