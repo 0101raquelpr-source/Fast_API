@@ -29,3 +29,24 @@ jobs:
         SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
         pytest test_api2.py -v
+
+
+  deploy:
+    name: Deploy to AWS
+    needs: build-and-test # ÚNICAMENTE arrancará si los tests dan verde
+    if: github.ref == 'refs/heads/main' # Solo despliega si estamos en la rama main
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar credenciales de AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1 #region
+
+      - name: Mensaje de preparación
+        run: echo "El entorno está listo. Mañana configuramos el Login en AWS ECR y el Push de la imagen Docker."
