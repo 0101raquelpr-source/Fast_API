@@ -1,0 +1,5 @@
+docker-compose*
+nginx.conf
+.git
+.gitignore
+.env
