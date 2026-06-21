@@ -183,7 +183,6 @@ def test_register_client_success(client):
     }
     response = client.post("/auth/register", json=payload)
     assert response.status_code == 201
-    # Modifica el texto de abajo según lo que devuelva exactamente tu API
     assert "confirmation" in response.text or response.status_code == 201
 
 # --- TEST DE LOGIN EXITOSO Y CAPTURA DE COOKIE ---
@@ -220,3 +219,22 @@ def test_client_cannot_access_admin_dashboard(client):
     
     response = client.get("/auth/dashboard", cookies=login_response.cookies)
     assert response.status_code == 403
+
+#  --- TEST DE SEGURIDAD: Un usuario con rol 'admin' SÍ puede acceder al dashboard ---
+def test_admin_can_access_admin_dashboard(client):
+    # Registramos un usuario especificando explícitamente el rol de admin
+    payload = {
+        "username": "usuario_test_admin", 
+        "password": "password_seguro_123",
+        "role": "admin" 
+    }
+    client.post("/auth/register", json=payload)
+    
+    # Hacemos login para obtener las cookies de sesión
+    login_response = client.post("/auth/login", data={"username": "usuario_test_admin", "password": "password_seguro_123"})
+    
+    # Intentamos acceder al dashboard protegida pasando sus cookies
+    response = client.get("/auth/dashboard", cookies=login_response.cookies)
+    
+    # ¡Aquí esperamos un 200 OK! El administrador tiene luz verde
+    assert response.status_code == 200
