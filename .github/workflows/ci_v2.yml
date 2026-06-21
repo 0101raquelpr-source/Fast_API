@@ -28,4 +28,4 @@ jobs:
       env:
         SECRET_KEY: "clave_secreta_temporal_para_los_tests_de_github"
       run: |
-        pytest test_api2.py -v
+        python -m pytest test_api2.py
