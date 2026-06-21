@@ -4,9 +4,9 @@ from src.models import tables
 import os
 
 
-#  Absolute Path
-
-DB_DIR = Path("/data") #para usar SQLite en un volumen de Docker
+# Path
+DB_DIR = Path("./data") #para usar SQLite en un volumen de Docker 
+# IMPORTANTE EL ./ para que sea relativa y no falle en github Actions.
 if not DB_DIR.exists():
     DB_DIR.mkdir(parents=True, exist_ok=True)
 
