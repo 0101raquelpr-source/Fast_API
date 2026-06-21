@@ -33,7 +33,7 @@ jobs:
 
   deploy:
     name: Deploy to AWS
-    needs: build-and-test # ÚNICAMENTE arrancará si los tests dan verde
+    needs: run-tests # ÚNICAMENTE arrancará si los tests dan verde
     if: github.ref == 'refs/heads/main' # Solo despliega si estamos en la rama main
     runs-on: ubuntu-latest
     
