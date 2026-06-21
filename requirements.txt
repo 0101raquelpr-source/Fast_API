@@ -20,5 +20,4 @@ python-multipart
 python-dotenv
 pytest
 httpx
->>>>>>> origin/main
 argon2_cffi
