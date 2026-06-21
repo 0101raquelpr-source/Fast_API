@@ -1,0 +1,31 @@
+name: FastAPI Automated Testing Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 1. Clonar el codigo en la maquina virtual
+      uses: actions/checkout@v4
+
+    - name: 2. Configurar el entorno de Python 3.12
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: 3. Instalar librerias del requirements.txt
+      run: |
+        python -m pip install --upgrade pip
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: 4. Ejecutar bateria de pruebas (Pytest)
+      env:
+        SECRET_KEY: "clave_secreta_temporal_para_los_tests_de_github"
+      run: |
+        python -m pytest test_api2.py
