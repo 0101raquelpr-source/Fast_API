@@ -26,6 +26,6 @@ jobs:
 
     - name: 4. Ejecutar bateria de pruebas (Pytest)
       env:
-        SECRET_KEY: "clave_secreta_temporal_para_los_tests_de_github"
+        SECRET_KEY: ${{ secrets.SECRET_KEY }}
       run: |
         pytest test_api2.py -v

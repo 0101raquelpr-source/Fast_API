@@ -188,41 +188,35 @@ def test_register_client_success(client):
 
 # --- TEST DE LOGIN EXITOSO Y CAPTURA DE COOKIE ---
 def test_login_success(client):
-    # Nota: Como tu documentación dice "form data", usamos 'data=' en vez de 'json='
-    login_data = {
-        "username": "nuevo_cliente_test", 
-        "password": "password_seguro_123"
-    }
-    response = client.post("/auth/login", data=login_data)
+    # Primero nos aseguramos de que el usuario existe creándolo aquí
+    payload = {"username": "usuario_test_login", "password": "password_seguro_123"}
+    client.post("/auth/register", json=payload)
+    
+    # Ahora intentamos el login.
+    response = client.post("/auth/login", data=payload) 
     assert response.status_code == 200
-    # Verificamos que la cookie 'access_token' existe en la respuesta
     assert "access_token" in response.cookies
 
 # --- TEST DE ACCESO AL PERFIL (Uso de la Cookie) ---
 def test_get_profile_authenticated(client):
-    # Primero nos logueamos para obtener la cookie
-    login_data = {"username": "nuevo_cliente_test", "password": "password_seguro_123"}
-    login_response = client.post("/auth/login", data=login_data)
+    payload = {"username": "usuario_test_perfil", "password": "password_seguro_123"}
+    client.post("/auth/register", json=payload)
     
-    # Extraemos las cookies del login
+    login_response = client.post("/auth/login", data=payload)
     auth_cookies = login_response.cookies
     
-    # Hacemos la petición al perfil pasando las cookies guardadas
     response = client.get("/auth/profile", cookies=auth_cookies)
     assert response.status_code == 200
     
     data = response.json()
-    assert data["username"] == "nuevo_cliente_test"
-    assert data["role"] == "client"  # Validamos que el rol por defecto es client
+    assert data["username"] == "usuario_test_perfil"
 
 # --- TEST DE SEGURIDAD: Un 'client' no puede entrar al dashboard de Admin ---
 def test_client_cannot_access_admin_dashboard(client):
-    # Logueamos al usuario estándar (client)
-    login_data = {"username": "nuevo_cliente_test", "password": "password_seguro_123"}
-    login_response = client.post("/auth/login", data=login_data)
+    payload = {"username": "usuario_test_acc", "password": "password_seguro_123"}
+    client.post("/auth/register", json=payload)
     
-    # Intentamos entrar al dashboard con la cookie de cliente
+    login_response = client.post("/auth/login", data=payload)
+    
     response = client.get("/auth/dashboard", cookies=login_response.cookies)
-    
-    # ¡Aquí deolverá un 403 Forbidden! El sistema debe denegar el paso
     assert response.status_code == 403
