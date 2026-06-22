@@ -31,11 +31,7 @@ jobs:
         pytest test_api2.py -v
 
     # SIMULACIÓN DE DESPLIEGUE EN AWS LOCALSTACK
-    - name: 5. Configurar herramientas de AWS en el Pipeline
-      run: |
-        sudo apt-get update && sudo apt-get install -y awscli
-
-    - name: 6. Crear repositorio y subir imagen al falso AWS
+    - name: 5. Crear repositorio y subir imagen al falso AWS
       run: |
         # 1. Indicar a AWS CLI que use nuestro LocalStack en lugar del AWS real
         aws ecr create-repository --repository-name mi-api-flask --endpoint-url=http://localhost:4566 --region eu-west-1 --no-sign-request
