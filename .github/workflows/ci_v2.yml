@@ -30,23 +30,18 @@ jobs:
       run: |
         pytest test_api2.py -v
 
+    # SIMULACIÓN DE DESPLIEGUE EN AWS LOCALSTACK
+    - name: 5. Configurar herramientas de AWS en el Pipeline
+      run: |
+        sudo apt-get update && sudo apt-get install -y awscli
 
-  deploy:
-    name: Deploy to AWS
-    needs: run-tests # ÚNICAMENTE arrancará si los tests dan verde
-    if: github.ref == 'refs/heads/main' # Solo despliega si estamos en la rama main
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
-
-      - name: Configurar credenciales de AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1 #region
-
-      - name: Mensaje de preparación
-        run: echo "El entorno está listo. Mañana configuramos el Login en AWS ECR y el Push de la imagen Docker."
+    - name: 6. Crear repositorio y subir imagen al falso AWS
+      run: |
+        # 1. Indicar a AWS CLI que use nuestro LocalStack en lugar del AWS real
+        aws ecr create-repository --repository-name mi-api-flask --endpoint-url=http://localhost:4566 --region eu-west-1 --no-sign-request
+        
+        # 2. Construir la imagen de nuestra API
+        docker build -t localhost:4566/mi-api-flask:latest .
+        
+        # 3. La subimos al "falso" ECR de LocalStack
+        docker push localhost:4566/mi-api-flask:latest
